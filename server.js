@@ -1,19 +1,52 @@
 'use strict';
 //2f7c43dfa0698bbdddc7090cdc618d03
-
+const url = "postgres://samah:1234@localhost:5432/movie"
 const recData = require("./data.json");
 const express = require("express");
+const bodyParser = require('body-parser');
 const cors = require("cors");
 const axios = require('axios').default;
 //require('dotenv').config()
 const port = 3000;
+const { Client } = require('pg')
+const client = new Client(url)
 
 const app1 = express();
 app1.use(cors());
 
 // const apiKey = process.env.API_KEY;
 
+app1.use(bodyParser.urlencoded({ extended: false }))
 
+app1.use(bodyParser.json())
+
+app1.post("/addMovie", handleAdd);
+
+function handleAdd(req,res)
+{    console.log("insert new");                              
+  const { id, title, overview } = req.body;
+  
+    let sql = 'INSERT INTO moviesInfo(id, title, overview ) VALUES($1, $2, $3) RETURNING *;' // sql query
+    let values = [id, title, overview];
+    client.query(sql, values).then((result) => {
+        console.log(result.rows);
+        return res.status(201).json(result.rows);
+    }).catch()
+
+}
+
+app1.get("/getMovies", handleGet);
+function handleGet(req, res) {
+
+    let sql = 'SELECT * from moviesInfo;'
+    client.query(sql).then((result) => {
+        console.log(result);
+        res.json(result.rows);
+    }).catch((err) => {
+      console.log("err for get")
+       handleErr500(err, req, res);
+    });
+}
 
 function Data(title, path, overview) {
   this.title = title;
@@ -21,11 +54,6 @@ function Data(title, path, overview) {
   this.overview = overview;
 }
 
-
-
-app1.listen(port, () => {
-  
-})
 
 
 app1.get("/", handleHome);
@@ -116,4 +144,11 @@ function handleErr404(req, res) {
   res.status(404).json(error);
 
 }
+client.connect().then(() => {
+
+    app1.listen(port, () => {
+        console.log(`Server is listening ${port}`);
+    });
+})
+
 
