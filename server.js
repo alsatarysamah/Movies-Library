@@ -123,8 +123,6 @@ app1.get("/favorite",handleFav);
 function handleFav(req,res)
 {
 
-app1.get("//favorite", handleFav);
-function handleFav(req, res) {
 
   res.send("Welcome to Favorite Page");
 }
